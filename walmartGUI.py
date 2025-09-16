@@ -78,7 +78,7 @@ start_y = 400
 start_x_stock = 910
 line_height = 40
 total_bill = 0
-#4 - load assets, images, sound
+
 index_value = 0
 qty = 0
 state = "shopping"
@@ -88,6 +88,9 @@ cart_total = pygwidgets.DisplayText(window,(start_x_stock,start_y + len(cart_ite
 admin_price = ""
 admin_qty = ""
 admin_name = ""
+
+#4 - load assets, images, sound
+
 #5 - loop forever
 
 def main():
@@ -139,6 +142,9 @@ def main():
                 clear_cart()
                 index_value = 0
                 qty = 0
+                total_bill = 0
+                cart_total = pygwidgets.DisplayText(window,(start_x_stock,start_y + len(cart_items)*line_height + 40 ), f"Total Bill Amount: ${total_bill}",fontSize=30, textColor=DARK_BLUE, justified="center")
+
                 productindex.clearText()
                 productquantity.clearText()
 
@@ -161,6 +167,7 @@ def main():
                 message.setText("")
                 error.setText("")
 
+            #Admin mode code
             if admin_button.handleEvent(event):
                 message.setText("")
                 error.setText("")
@@ -207,6 +214,8 @@ def main():
                 message.setText("")
                 error.setText("")
                 state = "shopping"
+            
+            #Exit Admin Mode
 
 
              
@@ -394,37 +403,33 @@ def main():
 
 
 def add_to_cart(index_value, qty):
-    
-    # for i in range(len(product_names)) :
-    #     print(f"{i}: {product_names[i]}    ${product_prices[i]}    stock {product_stock[i]}")
-    
-    # index_value = int(input("What is the indice number of the product you want to add: "))
+    # validating for item index
     if index_value < 0 or index_value >= len(product_names):
         error.setText("Invalid product index value")
         return
 
-    
+    #validating for product quantity 
     if qty < 1 or qty > product_stock[index_value]:
         error.setText("Invalid product quantity")
         return
 
-    
+    # checks if item is in cart already them just increases it quantity
     if product_names[index_value] in cart_items:
         idx = cart_items.index(product_names[index_value])
         if cart_quantity[idx] + qty > product_stock[index_value] + cart_quantity[idx]:
             error.setText("Exceeds available stock.")
             return
         cart_quantity[idx] +=  qty
-    
+    # otherwise add name, qty, price in cart items
     else:
         cart_items.append(product_names[index_value])
         cart_quantity.append(qty)
         cart_prices.append(product_prices[index_value])
     
+    # removes the qty added by user from stock
     product_stock[index_value] -= qty
 
     error.setText("")
-    print(cart_items)
     message.setText(f"Added {qty} x {product_names[index_value]} to cart.")
     
  
@@ -451,7 +456,7 @@ def remove_from_cart(index_value, qty):
         return
 
 
-    #figure out whoch product this is 
+    #figure out which product this is 
     product_name = cart_items[index_value]
 
     #find its slot in the inventory list = in product names give me the index of jeans
@@ -474,57 +479,16 @@ def remove_from_cart(index_value, qty):
         
         
 
-    
-def checkout_quit(total_bill):
-    if total_bill == 0:
-        error.setText("No items in cart yet! Start Shopping")
-        message.setText("")
-    else:
-   
-        after_disc_price=[]
-        for i in range(len(cart_items)): 
-            name = cart_items[i]
-            quantitiy = cart_quantity[i]
-            price = product_prices[i]
-            total_price = price*quantitiy
-            if quantitiy >= 5:
-                total = total_price*0.95
-                after_disc_price.append(total)
-                
-            else:
-                total = total_price
-                after_disc_price.append(total)
-            
-        total_bill = sum(after_disc_price)
-        print(f"totalbill:{total_bill}")
-        print(f"final list:{after_disc_price}")
-        
-        order_dic = 0
-        if total_bill >= 200:
-            order_dic = total_bill*0.1
-        
-        elif total_bill >=100:
-            order_dic = total_bill*0.05
-            
-        total_bill = total_bill - order_dic
-
-        if order_dic > 0 :
-            message.setText(f"Order discount : -${order_dic} \n Final Cart Total after discount: ${total_bill} \n Thank you for shopping at list mart!")
-          
-        else:
-            message.setText(f"Final Cart Total : ${total_bill} \n Thank you for shopping at list mart!")
-        
-       
-    
-
 
 def clear_cart():
+    # runs a loop and deleted everything from cart and add it back to stock
     for i in range(len(cart_items)):
         name = cart_items[i]
         quantity = cart_quantity[i]
         product_index = product_names.index(name)
         product_stock[product_index] += quantity
  
+    # make all var to its original values
     total_bill = 0
     index_value = 0
     qty = 0
@@ -535,13 +499,53 @@ def clear_cart():
     error.setText("")
 
 
+def checkout_quit(total_bill):
+    if total_bill == 0:
+        error.setText("No items in cart yet! Start Shopping")
+        message.setText("")
+    else:
+   
+        after_disc_price=[]
+        for i in range(len(cart_items)): 
+            name = cart_items[i]
+            quantitiy = cart_quantity[i]
+            price = cart_prices[i]
+            total_price = price*quantitiy
+            
+          
+            if quantitiy >= 5:
+                total = total_price*0.95
+                after_disc_price.append(total)
+                
+            else:
+                total = total_price
+                after_disc_price.append(total)
+            
+        total_bill = sum(after_disc_price)
+        
+        print(f"totalbill:{total_bill}")
+        print(f"final list:{after_disc_price}")
+        
+        order_dic = 0
+        # if total bill is more than 200, 10% discount
+        if total_bill >= 200:
+            order_dic = total_bill*0.1
+        
+         # if total bill is more than 100, 5% discount
+        elif total_bill >=100:
+            order_dic = total_bill*0.05
+            
+        total_bill = total_bill - order_dic
+        print(total_bill)
 
-
-
-                     
+        if order_dic > 0 :
+            message.setText(f"Order discount : -${order_dic:.2f} \n Final Cart Total after discount: ${total_bill:.2f} \n Thank you for shopping at list mart!")
+          
+        else:
+            message.setText(f"Final Cart Total : ${total_bill:.2f} \n Thank you for shopping at list mart!")
+        
+           
     
 main()
 
 
-#Homework : check if everything about paid button works, then add one more button, make it look diff, it is add stock button. 
-# make a fake pw like 12345
